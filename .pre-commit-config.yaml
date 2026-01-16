@@ -1,0 +1,64 @@
+fail_fast: false
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: fix-byte-order-marker
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: cargo fmt
+        entry: bash -lc 'cargo fmt -- --check'
+        language: system
+        files: \.rs$
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: cargo-deny
+        name: cargo deny check
+        entry: bash -lc 'cargo deny check'
+        language: system
+        files: \.rs$
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: typos
+        name: typos
+        entry: bash -lc 'typos'
+        language: system
+        files: .*
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: cargo-check
+        name: cargo check
+        entry: bash -lc 'cargo check --workspace --all-targets'
+        language: system
+        files: \.rs$
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: cargo-clippy
+        name: cargo clippy
+        entry: bash -lc 'cargo clippy --workspace --all-targets --all-features -- -D warnings'
+        language: system
+        files: \.rs$
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: cargo-test
+        name: cargo test (nextest, no-tests ok)
+        entry: bash -lc 'cargo nextest run --workspace --all-features --no-tests=warn'
+        language: system
+        files: \.rs$
+        pass_filenames: false
+        stages: [pre-commit]

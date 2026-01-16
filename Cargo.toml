@@ -1,0 +1,11 @@
+[package]
+name = "mtk-cli"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[lib]
+name = "mtk-cli"
+path = "src/lib.rs"
+
+[dependencies]
