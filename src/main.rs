@@ -1,30 +1,43 @@
 use std::env;
-// mtkcli -i input.csv
+use std::fs;
+use std::path::PathBuf;
 
 struct Args {
-    pwd: String,
-    input: String,
+    pwd: PathBuf,
+    input: PathBuf,
 }
 
 impl Args {
-    fn new() -> Args {
-        Args { pwd: String::new(), input: String::new() }
+    fn parse() -> Result<Self, String> {
+        let pwd = env::current_dir()
+            .map_err(|e| format!("failed to get current working directory: {}", e))?;
+        let mut input: Option<String> = None;
+        let mut iter = env::args().skip(1);
+        while let Some(arg) = iter.next() {
+            if arg == "-i" {
+                input = iter.next();
+                break;
+            }
+        }
+        let input = input.ok_or("missing -i <file> argument")?;
+
+        Ok(Self { pwd, input: input.into() })
     }
 }
 
 fn main() {
-    let env_args_collection: Vec<String> = env::args().collect();
-    //获取pwd
-    let mut args = Args::new();
-    args.pwd = env_args_collection[0].clone();
+    let args = Args::parse().unwrap_or_else(|e| {
+        eprintln!("error: {e}");
+        std::process::exit(1);
+    });
 
-    let mut index = 1;
-    while index < env_args_collection.len() {
-        if env_args_collection[index] == "-i" && env_args_collection[index + 1] != "" {
-            args.input = env_args_collection[index + 1].clone();
-            break;
-        }
-        index += 1;
-    }
-    println!("pwd: {}, input: {}", args.pwd, args.input);
+    let path =
+        if args.input.is_absolute() { args.input.clone() } else { args.pwd.join(&args.input) };
+
+    let content = fs::read_to_string(&path).unwrap_or_else(|e| {
+        eprintln!("failed to read {}: {e}", path.display());
+        std::process::exit(1);
+    });
+
+    println!("{content}");
 }
